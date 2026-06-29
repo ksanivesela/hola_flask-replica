@@ -82,4 +82,5 @@ jobs:
             docker service ls
 
             echo "Logs del servicio (debug):"
-            docker service logs borrar --tail 50
+            docker service logs borrar_smith --tail 50
+
