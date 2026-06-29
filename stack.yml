@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   smith:
-    image: ghcr.io/ksanivesela/holaflask-devops:latest
+    image: ghcr.io/ksanivesela/hola_flask-replica:latest
     networks:
       - traefik-public
 
