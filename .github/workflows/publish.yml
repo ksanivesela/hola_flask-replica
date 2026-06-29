@@ -30,15 +30,14 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/ksanivesela/hola_flask-replica:latest
-      
-      - name: mostrar variables (solo locales, no secrets)
+
+      - name: Mostrar datos de conexión
         run: |
-          echo "Probando conexion SSH con:"
           echo "Host: ${{ secrets.VPS_HOST }}"
           echo "Usuario: ${{ secrets.VPS_USER }}"
           echo "Puerto: ${{ secrets.VPS_SSH_PORT }}"
 
-      - name: Probar la ssh en el vps
+      - name: Probar conexión SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -46,10 +45,10 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
-            echo "Probando conexion ssh"
-            touch quintoa.txt
-      
-      - name: Pasar archivos desde git al VPS
+            echo "Conexion SSH OK"
+            mkdir -p ~/landinga
+
+      - name: Copiar archivos al VPS
         uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -59,7 +58,7 @@ jobs:
           source: "stack.yml,Makefile"
           target: "/home/${{ secrets.VPS_USER }}/landinga"
 
-      - name: Desplegar en VPS
+      - name: Desplegar en VPS (Docker Swarm)
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -67,20 +66,31 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
-            echo "Desplegando servicios"
+            echo "🚀 Desplegando servicios"
 
-            mkdir -p ~/landinga
             cd ~/landinga
 
-            echo "Pull imagen..."
+            echo "📦 Pull imagen..."
             docker pull ghcr.io/ksanivesela/hola_flask-replica:latest
 
-            echo "Deploy stack..."
+            echo "⚙️ Deploy stack..."
             docker stack deploy -c stack.yml borrar
 
-            echo "Servicios activos:"
+            echo "⏳ Esperando a que el servicio levante..."
+
+            for i in {1..10}; do
+              REPLICAS=$(docker service ls --filter name=borrar_smith --format "{{.Replicas}}")
+
+              if [[ "$REPLICAS" == "1/1" ]]; then
+                echo "✅ Servicio listo!"
+                docker service ls
+                exit 0
+              fi
+
+              echo "⌛ Aún no listo ($REPLICAS)... esperando"
+              sleep 3
+            done
+
+            echo "❌ Error: servicio no levantó"
             docker service ls
-
-            echo "Logs del servicio (debug):"
-            docker service logs borrar_smith --tail 50
-
+            exit 1
