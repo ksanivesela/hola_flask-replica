@@ -5,6 +5,12 @@ services:
     image: ghcr.io/ksanivesela/hola_flask-replica:latest
     networks:
       - traefik-public
+    
+    ports:
+      - target: 5000
+        published: 80
+        protocol: tcp
+        mode: host 
 
     deploy:
       replicas: 1
