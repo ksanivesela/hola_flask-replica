@@ -1,0 +1,6 @@
+services:
+  holaflask:
+    build: .
+    container_name: holaflask-devops
+    ports:
+      - "5000:5000"
