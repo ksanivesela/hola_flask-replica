@@ -33,11 +33,10 @@ jobs:
       
       - name: mostrar variables (solo locales, no secrets)
         run: |
-          echo "Provando conexion SSH con:"
+          echo "Probando conexion SSH con:"
           echo "Host: ${{ secrets.VPS_HOST }}"
           echo "Usuario: ${{ secrets.VPS_USER }}"
           echo "Puerto: ${{ secrets.VPS_SSH_PORT }}"
-          echo "Password: ${{ secrets.VPS_PASSWORD }}"
 
       - name: Probar la ssh en el vps
         uses: appleboy/ssh-action@v1
@@ -68,14 +67,19 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
-            echo: "Desplegando serivicios"
+            echo "Desplegando servicios"
+
+            mkdir -p ~/landinga
             cd ~/landinga
+
+            echo "Pull imagen..."
             docker pull ghcr.io/ksanivesela/hola_flask-replica:latest
+
+            echo "Deploy stack..."
             docker stack deploy -c stack.yml borrar
 
+            echo "Servicios activos:"
             docker service ls
-          
- 
-            
 
-
+            echo "Logs del servicio (debug):"
+            docker service logs borrar --tail 50
