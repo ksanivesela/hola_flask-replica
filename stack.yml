@@ -3,35 +3,41 @@ version: '3.8'
 services:
   smith:
     image: ghcr.io/ksanivesela/hola_flask-replica:latest
+
     networks:
       - traefik-public
-    
-    ports:
-      - target: 5000
-        published: 80
-        protocol: tcp
-        mode: host 
 
     deploy:
       replicas: 1
+
       update_config:
         parallelism: 1
         delay: 10s
+
       restart_policy:
         condition: on-failure
 
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.smith.entrypoints=http"
+
+        # HTTP
         - "traefik.http.routers.smith.rule=Host(`smith.byronrm.com`)"
-        - "traefik.http.middlewares.smith-https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.routers.smith.entrypoints=http"
         - "traefik.http.routers.smith.middlewares=smith-https-redirect"
-        - "traefik.http.routers.smith-secure.entrypoints=https"
+
+        # Redirect HTTP → HTTPS
+        - "traefik.http.middlewares.smith-https-redirect.redirectscheme.scheme=https"
+
+        # HTTPS
         - "traefik.http.routers.smith-secure.rule=Host(`smith.byronrm.com`)"
+        - "traefik.http.routers.smith-secure.entrypoints=https"
         - "traefik.http.routers.smith-secure.tls=true"
         - "traefik.http.routers.smith-secure.tls.certresolver=http"
-        - "traefik.http.routers.smith-secure.service=smith"
+
+        # Service (puerto interno del contenedor)
         - "traefik.http.services.smith.loadbalancer.server.port=5000"
+
+        # Red de Traefik
         - "traefik.docker.network=traefik-public"
 
 networks:
