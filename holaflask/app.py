@@ -1,14 +1,7 @@
 from flask import Flask
 
-def create_app():
-    app = Flask(__name__)
+app = Flask(__name__)
 
-    @app.route("/")
-    def inicio():
-        return """TU HTML (igual que ya tienes)"""
-
-    @app.route("/health")
-    def health():
-        return "OK"
-
-    return app
+@app.route("/")
+def home():
+    return "Hola Flask Replica 🚀"
